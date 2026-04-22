@@ -49,18 +49,19 @@ if (-not $Version) {
 Write-Host "Installing goto $Version for $Target..."
 
 # ── download & verify ─────────────────────────────────────────────────────────
-$TmpDir = Join-Path $env:TEMP "goto-install-$(Get-Random)"
-New-Item -ItemType Directory -Path $TmpDir | Out-Null
-
+$TmpDir = $null
 try {
+    $TmpDir = Join-Path $env:TEMP "goto-install-$(Get-Random)"
+    New-Item -ItemType Directory -Path $TmpDir | Out-Null
+
     $Archive = "goto-$Target-$Version.zip"
     $BaseUrl = "https://github.com/piotr-lebski/goto/releases/download/$Version"
 
-    Invoke-WebRequest -Uri "$BaseUrl/$Archive"        -OutFile "$TmpDir\$Archive"
-    Invoke-WebRequest -Uri "$BaseUrl/$Archive.sha256" -OutFile "$TmpDir\$Archive.sha256"
+    Invoke-WebRequest -Uri "$BaseUrl/$Archive"        -OutFile "$TmpDir\$Archive"        -UseBasicParsing
+    Invoke-WebRequest -Uri "$BaseUrl/$Archive.sha256" -OutFile "$TmpDir\$Archive.sha256" -UseBasicParsing
 
     # .sha256 format from openssl dgst -sha256 -r: "<hash> *<filename>"
-    $expectedLine = Get-Content "$TmpDir\$Archive.sha256"
+    $expectedLine = (Get-Content "$TmpDir\$Archive.sha256" -TotalCount 1).Trim()
     $expectedHash = $expectedLine.Split(' ')[0].ToUpper()
     $actualHash   = (Get-FileHash "$TmpDir\$Archive" -Algorithm SHA256).Hash.ToUpper()
     if ($expectedHash -ne $actualHash) {
@@ -75,9 +76,11 @@ try {
     Write-Ok "Installed to $BinDir\goto.exe"
 
     # ── PATH ──────────────────────────────────────────────────────────────────
-    $currentPath = [System.Environment]::GetEnvironmentVariable("PATH", "User")
-    if ($currentPath -notlike "*$BinDir*") {
-        [System.Environment]::SetEnvironmentVariable("PATH", "$BinDir;$currentPath", "User")
+    $currentPath  = [System.Environment]::GetEnvironmentVariable("PATH", "User")
+    $pathParts    = if ($currentPath) { $currentPath -split ';' | Where-Object { $_ -ne '' } } else { @() }
+    if ($pathParts -notcontains $BinDir) {
+        $newPath = if ($currentPath) { "$BinDir;$currentPath" } else { $BinDir }
+        [System.Environment]::SetEnvironmentVariable("PATH", $newPath, "User")
         $env:PATH = "$BinDir;$env:PATH"
         Write-Ok "Added $BinDir to PATH"
     }
@@ -112,9 +115,11 @@ try {
         Write-Host "  Restart PowerShell or run:"
         Write-Host "    . `$PROFILE"
     } else {
-        Write-Host "  Add $BinDir to your PATH, then restart PowerShell."
+        Write-Host "  Restart PowerShell to pick up the updated PATH."
     }
 
 } finally {
-    Remove-Item -Recurse -Force $TmpDir -ErrorAction SilentlyContinue
+    if ($TmpDir -and (Test-Path $TmpDir)) {
+        Remove-Item -Recurse -Force $TmpDir -ErrorAction SilentlyContinue
+    }
 }
