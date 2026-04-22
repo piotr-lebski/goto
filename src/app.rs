@@ -50,9 +50,7 @@ pub fn run(cli: Cli) -> Result<(), String> {
     // No args — interactive selection
     let collection = store.load()?;
     if collection.iter().count() == 0 {
-        return Err(
-            "No bookmarks saved. Use 'goto --add <name>' to save a bookmark.".to_string(),
-        );
+        return Err("No bookmarks saved. Use 'goto --add <name>' to save a bookmark.".to_string());
     }
 
     let selected_path = if std::env::var_os("GOTO_SELECT_FIRST").is_some() {

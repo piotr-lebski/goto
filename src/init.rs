@@ -120,11 +120,9 @@ fn detect_shell_from_env<F: Fn(&str) -> Option<String>>(env: F) -> Result<Shell,
             )),
         };
     }
-    Err(
-        "Could not detect shell. \
+    Err("Could not detect shell. \
          Please specify with: goto --init <bash|zsh|fish|powershell>"
-            .to_string(),
-    )
+        .to_string())
 }
 
 #[cfg(test)]
@@ -167,7 +165,10 @@ mod tests {
     #[test]
     fn parse_shell_unknown_returns_error() {
         let err = parse_shell("nushell").unwrap_err();
-        assert!(err.contains("nushell"), "error should name the bad value: {err}");
+        assert!(
+            err.contains("nushell"),
+            "error should name the bad value: {err}"
+        );
     }
 
     // --- snippet ---
@@ -187,7 +188,10 @@ mod tests {
     #[test]
     fn fish_snippet_contains_wrapper_function() {
         let s = snippet(Shell::Fish);
-        assert!(s.contains("function goto"), "expected function definition: {s}");
+        assert!(
+            s.contains("function goto"),
+            "expected function definition: {s}"
+        );
         assert!(s.contains("command goto"), "expected binary call: {s}");
     }
 
@@ -203,7 +207,11 @@ mod tests {
     #[test]
     fn detects_bash_from_bash_version() {
         let shell = detect_shell_from_env(|key| {
-            if key == "BASH_VERSION" { Some("5.0".to_string()) } else { None }
+            if key == "BASH_VERSION" {
+                Some("5.0".to_string())
+            } else {
+                None
+            }
         })
         .unwrap();
         assert_eq!(shell, Shell::Bash);
@@ -212,7 +220,11 @@ mod tests {
     #[test]
     fn detects_zsh_from_zsh_version() {
         let shell = detect_shell_from_env(|key| {
-            if key == "ZSH_VERSION" { Some("5.9".to_string()) } else { None }
+            if key == "ZSH_VERSION" {
+                Some("5.9".to_string())
+            } else {
+                None
+            }
         })
         .unwrap();
         assert_eq!(shell, Shell::Zsh);
@@ -221,7 +233,11 @@ mod tests {
     #[test]
     fn detects_fish_from_fish_version() {
         let shell = detect_shell_from_env(|key| {
-            if key == "FISH_VERSION" { Some("3.7".to_string()) } else { None }
+            if key == "FISH_VERSION" {
+                Some("3.7".to_string())
+            } else {
+                None
+            }
         })
         .unwrap();
         assert_eq!(shell, Shell::Fish);
@@ -230,7 +246,11 @@ mod tests {
     #[test]
     fn detects_powershell_from_ps_module_path() {
         let shell = detect_shell_from_env(|key| {
-            if key == "PSModulePath" { Some("/path/modules".to_string()) } else { None }
+            if key == "PSModulePath" {
+                Some("/path/modules".to_string())
+            } else {
+                None
+            }
         })
         .unwrap();
         assert_eq!(shell, Shell::PowerShell);
@@ -250,7 +270,11 @@ mod tests {
     #[test]
     fn detects_bash_from_shell_env_path() {
         let shell = detect_shell_from_env(|key| {
-            if key == "SHELL" { Some("/usr/bin/bash".to_string()) } else { None }
+            if key == "SHELL" {
+                Some("/usr/bin/bash".to_string())
+            } else {
+                None
+            }
         })
         .unwrap();
         assert_eq!(shell, Shell::Bash);
@@ -259,7 +283,11 @@ mod tests {
     #[test]
     fn detects_zsh_from_shell_env_path() {
         let shell = detect_shell_from_env(|key| {
-            if key == "SHELL" { Some("/bin/zsh".to_string()) } else { None }
+            if key == "SHELL" {
+                Some("/bin/zsh".to_string())
+            } else {
+                None
+            }
         })
         .unwrap();
         assert_eq!(shell, Shell::Zsh);
@@ -268,7 +296,11 @@ mod tests {
     #[test]
     fn detects_fish_from_shell_env_path() {
         let shell = detect_shell_from_env(|key| {
-            if key == "SHELL" { Some("/usr/local/bin/fish".to_string()) } else { None }
+            if key == "SHELL" {
+                Some("/usr/local/bin/fish".to_string())
+            } else {
+                None
+            }
         })
         .unwrap();
         assert_eq!(shell, Shell::Fish);
@@ -277,10 +309,17 @@ mod tests {
     #[test]
     fn returns_error_for_unrecognized_shell_env_path() {
         let err = detect_shell_from_env(|key| {
-            if key == "SHELL" { Some("/usr/bin/nushell".to_string()) } else { None }
+            if key == "SHELL" {
+                Some("/usr/bin/nushell".to_string())
+            } else {
+                None
+            }
         })
         .unwrap_err();
-        assert!(err.contains("nushell"), "error should name the shell: {err}");
+        assert!(
+            err.contains("nushell"),
+            "error should name the shell: {err}"
+        );
     }
 
     #[test]
@@ -306,7 +345,11 @@ mod tests {
     #[test]
     fn detects_bash_from_bare_shell_env_name() {
         let shell = detect_shell_from_env(|key| {
-            if key == "SHELL" { Some("bash".to_string()) } else { None }
+            if key == "SHELL" {
+                Some("bash".to_string())
+            } else {
+                None
+            }
         })
         .unwrap();
         assert_eq!(shell, Shell::Bash);
@@ -315,10 +358,13 @@ mod tests {
     #[test]
     fn detects_bash_from_mixed_case_shell_env_path() {
         let shell = detect_shell_from_env(|key| {
-            if key == "SHELL" { Some("/usr/bin/Bash".to_string()) } else { None }
+            if key == "SHELL" {
+                Some("/usr/bin/Bash".to_string())
+            } else {
+                None
+            }
         })
         .unwrap();
         assert_eq!(shell, Shell::Bash);
     }
 }
-

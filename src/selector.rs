@@ -98,7 +98,10 @@ mod tests {
         let items = format_items(&collection);
         let positions: Vec<usize> = items
             .iter()
-            .map(|s| s.find(" | ").expect("formatted item must contain ' | ' separator"))
+            .map(|s| {
+                s.find(" | ")
+                    .expect("formatted item must contain ' | ' separator")
+            })
             .collect();
         assert!(
             positions.windows(2).all(|w| w[0] == w[1]),

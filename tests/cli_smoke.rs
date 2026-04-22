@@ -186,7 +186,10 @@ fn goto_remove_deletes_existing_bookmark() {
         .unwrap();
 
     let stdout = String::from_utf8_lossy(&list_output.stdout);
-    assert!(!stdout.contains("mydir"), "bookmark should be gone: {stdout}");
+    assert!(
+        !stdout.contains("mydir"),
+        "bookmark should be gone: {stdout}"
+    );
 }
 
 #[test]
@@ -252,10 +255,7 @@ fn goto_no_args_prints_path_to_stdout_on_selection() {
         String::from_utf8_lossy(&output.stderr)
     );
     let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    assert_eq!(
-        stdout,
-        target_dir.path().to_string_lossy().as_ref()
-    );
+    assert_eq!(stdout, target_dir.path().to_string_lossy().as_ref());
 }
 
 #[test]
@@ -293,8 +293,14 @@ fn goto_init_bash_prints_shell_function() {
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("goto()"), "expected bash function: {stdout}");
-    assert!(stdout.contains("command goto"), "expected binary call: {stdout}");
+    assert!(
+        stdout.contains("goto()"),
+        "expected bash function: {stdout}"
+    );
+    assert!(
+        stdout.contains("command goto"),
+        "expected binary call: {stdout}"
+    );
 }
 
 #[test]
@@ -307,7 +313,10 @@ fn goto_init_zsh_prints_shell_function() {
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("goto()"), "expected zsh function: {stdout}");
-    assert!(stdout.contains("command goto"), "expected binary call: {stdout}");
+    assert!(
+        stdout.contains("command goto"),
+        "expected binary call: {stdout}"
+    );
 }
 
 #[test]
@@ -319,8 +328,14 @@ fn goto_init_fish_prints_shell_function() {
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("function goto"), "expected fish function: {stdout}");
-    assert!(stdout.contains("command goto"), "expected binary call: {stdout}");
+    assert!(
+        stdout.contains("function goto"),
+        "expected fish function: {stdout}"
+    );
+    assert!(
+        stdout.contains("command goto"),
+        "expected binary call: {stdout}"
+    );
 }
 
 #[test]
@@ -332,7 +347,10 @@ fn goto_init_powershell_prints_shell_function() {
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("Invoke-GoTo"), "expected PS function: {stdout}");
+    assert!(
+        stdout.contains("Invoke-GoTo"),
+        "expected PS function: {stdout}"
+    );
     assert!(stdout.contains("Set-Alias"), "expected alias: {stdout}");
 }
 
@@ -370,7 +388,10 @@ fn goto_init_auto_detects_bash_from_env() {
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("goto()"), "expected bash function: {stdout}");
+    assert!(
+        stdout.contains("goto()"),
+        "expected bash function: {stdout}"
+    );
 }
 
 #[test]
@@ -404,7 +425,10 @@ fn goto_init_auto_detects_fish_from_env() {
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("function goto"), "expected fish function: {stdout}");
+    assert!(
+        stdout.contains("function goto"),
+        "expected fish function: {stdout}"
+    );
 }
 
 #[test]
