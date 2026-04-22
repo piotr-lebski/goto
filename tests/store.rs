@@ -1,7 +1,7 @@
 use goto::bookmarks::{Bookmark, BookmarkCollection};
 use goto::store::Store;
-use tempfile::tempdir;
 use std::sync::Mutex;
+use tempfile::tempdir;
 
 // Mutex to serialize env-var tests and prevent data races
 static ENV_MUTEX: Mutex<()> = Mutex::new(());
@@ -20,7 +20,10 @@ fn save_and_load_round_trip_keeps_alphabetical_order() {
     store.save(&bookmarks).unwrap();
     let loaded = store.load().unwrap();
 
-    let names: Vec<_> = loaded.iter().map(|bookmark| bookmark.name.as_str()).collect();
+    let names: Vec<_> = loaded
+        .iter()
+        .map(|bookmark| bookmark.name.as_str())
+        .collect();
     assert_eq!(names, vec!["alpha", "zeta"]);
 }
 
@@ -47,7 +50,10 @@ fn load_normalizes_unsorted_bookmarks_from_disk() {
     .unwrap();
 
     let loaded = store.load().unwrap();
-    let names: Vec<_> = loaded.iter().map(|bookmark| bookmark.name.as_str()).collect();
+    let names: Vec<_> = loaded
+        .iter()
+        .map(|bookmark| bookmark.name.as_str())
+        .collect();
     assert_eq!(names, vec!["alpha", "zeta"]);
 }
 
@@ -99,5 +105,10 @@ fn resolve_config_dir_defaults_to_dot_config_under_home() {
     }
     let result = result.unwrap();
     let expected = dirs::home_dir().unwrap().join(".config");
-    assert_eq!(result, expected, "expected $HOME/.config, got: {}", result.display());
+    assert_eq!(
+        result,
+        expected,
+        "expected $HOME/.config, got: {}",
+        result.display()
+    );
 }

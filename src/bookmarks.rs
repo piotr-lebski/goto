@@ -46,11 +46,7 @@ impl BookmarkCollection {
         Ok(())
     }
 
-    pub fn replace(
-        &mut self,
-        name: &str,
-        path: impl Into<String>,
-    ) -> Result<(), String> {
+    pub fn replace(&mut self, name: &str, path: impl Into<String>) -> Result<(), String> {
         let bookmark = self
             .bookmarks
             .iter_mut()
@@ -91,10 +87,8 @@ mod tests {
     use super::*;
 
     fn col(pairs: &[(&str, &str)]) -> BookmarkCollection {
-        BookmarkCollection::from_vec(
-            pairs.iter().map(|(n, p)| Bookmark::new(*n, *p)).collect(),
-        )
-        .unwrap()
+        BookmarkCollection::from_vec(pairs.iter().map(|(n, p)| Bookmark::new(*n, *p)).collect())
+            .unwrap()
     }
 
     #[test]
