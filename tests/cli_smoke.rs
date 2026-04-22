@@ -455,3 +455,149 @@ fn goto_init_auto_detect_fails_when_no_shell_env() {
         String::from_utf8_lossy(&output.stdout)
     );
 }
+
+#[test]
+fn goto_prune_on_empty_store_prints_nothing_to_prune() {
+    let temp = tempfile::tempdir().unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_goto"))
+        .arg("--prune")
+        .env("GOTO_CONFIG_HOME", temp.path())
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("Nothing to prune"),
+        "expected nothing-to-prune message: {stderr}"
+    );
+}
+
+#[test]
+fn goto_prune_with_all_valid_bookmarks_prints_nothing_to_prune() {
+    let temp = tempfile::tempdir().unwrap();
+    let config_dir = temp.path();
+    let target_dir = tempfile::tempdir().unwrap();
+    let bookmarks_dir = config_dir.join("goto");
+    std::fs::create_dir_all(&bookmarks_dir).unwrap();
+    std::fs::write(
+        bookmarks_dir.join("bookmarks.json"),
+        format!(
+            r#"{{"bookmarks":[{{"name":"valid","path":"{}"}}]}}"#,
+            target_dir.path().to_string_lossy().replace('\\', "\\\\")
+        ),
+    )
+    .unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_goto"))
+        .arg("--prune")
+        .env("GOTO_CONFIG_HOME", config_dir)
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("Nothing to prune"),
+        "expected nothing-to-prune message: {stderr}"
+    );
+}
+
+#[test]
+fn goto_prune_yes_removes_stale_bookmarks() {
+    let temp = tempfile::tempdir().unwrap();
+    let config_dir = temp.path();
+    let valid_dir = tempfile::tempdir().unwrap();
+    let bookmarks_dir = config_dir.join("goto");
+    std::fs::create_dir_all(&bookmarks_dir).unwrap();
+    std::fs::write(
+        bookmarks_dir.join("bookmarks.json"),
+        format!(
+            r#"{{"bookmarks":[{{"name":"valid","path":"{}"}},{{"name":"stale","path":"/nonexistent/path/xyzzy123"}}]}}"#,
+            valid_dir.path().to_string_lossy().replace('\\', "\\\\")
+        ),
+    )
+    .unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_goto"))
+        .args(["--prune", "--yes"])
+        .env("GOTO_CONFIG_HOME", config_dir)
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("stale") && stderr.contains("xyzzy123"),
+        "expected stale bookmark listed before removal: {stderr}"
+    );
+    assert!(
+        stderr.contains("Pruned 1 bookmark(s)"),
+        "expected pruned message: {stderr}"
+    );
+
+    let list_output = Command::new(env!("CARGO_BIN_EXE_goto"))
+        .arg("--list")
+        .env("GOTO_CONFIG_HOME", config_dir)
+        .output()
+        .unwrap();
+    let list_stdout = String::from_utf8_lossy(&list_output.stdout);
+    assert!(
+        !list_stdout.contains("stale"),
+        "stale bookmark should be removed: {list_stdout}"
+    );
+    assert!(
+        list_stdout.contains("valid"),
+        "valid bookmark should remain: {list_stdout}"
+    );
+}
+
+#[test]
+fn goto_prune_yes_on_all_stale_leaves_empty_store() {
+    let temp = tempfile::tempdir().unwrap();
+    let config_dir = temp.path();
+    let bookmarks_dir = config_dir.join("goto");
+    std::fs::create_dir_all(&bookmarks_dir).unwrap();
+    std::fs::write(
+        bookmarks_dir.join("bookmarks.json"),
+        r#"{"bookmarks":[{"name":"stale","path":"/nonexistent/path/xyzzy123"}]}"#,
+    )
+    .unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_goto"))
+        .args(["--prune", "--yes"])
+        .env("GOTO_CONFIG_HOME", config_dir)
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("Pruned 1 bookmark(s)"),
+        "expected pruned message: {stderr}"
+    );
+
+    let list_output = Command::new(env!("CARGO_BIN_EXE_goto"))
+        .arg("--list")
+        .env("GOTO_CONFIG_HOME", config_dir)
+        .output()
+        .unwrap();
+    assert_eq!(String::from_utf8_lossy(&list_output.stdout), "");
+}

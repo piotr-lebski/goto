@@ -11,23 +11,31 @@ pub struct Cli {
         value_name = "SHELL",
         num_args = 0..=1,
         default_missing_value = "auto",
-        conflicts_with_all = ["list", "add", "replace", "remove"]
+        conflicts_with_all = ["list", "add", "replace", "remove", "prune", "yes"]
     )]
     pub init: Option<String>,
 
     /// Print all bookmarks as 'name | path'
-    #[arg(long, conflicts_with_all = ["add", "replace", "remove"])]
+    #[arg(long, conflicts_with_all = ["add", "replace", "remove", "prune", "yes"])]
     pub list: bool,
 
     /// Save the current directory as NAME
-    #[arg(long, value_name = "NAME", conflicts_with_all = ["list", "replace", "remove"])]
+    #[arg(long, value_name = "NAME", conflicts_with_all = ["list", "replace", "remove", "prune", "yes"])]
     pub add: Option<String>,
 
     /// Update the saved path for an existing bookmark NAME
-    #[arg(long, value_name = "NAME", conflicts_with_all = ["list", "add", "remove"])]
+    #[arg(long, value_name = "NAME", conflicts_with_all = ["list", "add", "remove", "prune", "yes"])]
     pub replace: Option<String>,
 
     /// Delete bookmark NAME
-    #[arg(long, value_name = "NAME", conflicts_with_all = ["list", "add", "replace"])]
+    #[arg(long, value_name = "NAME", conflicts_with_all = ["list", "add", "replace", "prune", "yes"])]
     pub remove: Option<String>,
+
+    /// Remove bookmarks whose directories no longer exist
+    #[arg(long, conflicts_with_all = ["list", "add", "replace", "remove", "init"])]
+    pub prune: bool,
+
+    /// Skip the confirmation prompt (use with --prune)
+    #[arg(long, conflicts_with_all = ["list", "add", "replace", "remove", "init"])]
+    pub yes: bool,
 }

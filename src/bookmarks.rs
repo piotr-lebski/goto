@@ -13,6 +13,10 @@ impl Bookmark {
             path: path.into(),
         }
     }
+
+    pub fn is_valid(&self) -> bool {
+        std::path::Path::new(&self.path).is_dir()
+    }
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -64,6 +68,16 @@ impl BookmarkCollection {
             .ok_or_else(|| format!("bookmark '{name}' does not exist"))?;
         self.bookmarks.remove(pos);
         Ok(())
+    }
+
+    pub fn stale(&self) -> impl Iterator<Item = &Bookmark> {
+        self.bookmarks.iter().filter(|b| !b.is_valid())
+    }
+
+    pub fn prune(&mut self) -> usize {
+        let before = self.bookmarks.len();
+        self.bookmarks.retain(|b| b.is_valid());
+        before - self.bookmarks.len()
     }
 }
 
@@ -135,5 +149,42 @@ mod tests {
         let mut c = col(&[]);
         let err = c.remove("ghost").unwrap_err();
         assert!(err.contains("does not exist"), "got: {err}");
+    }
+
+    #[test]
+    fn is_valid_returns_true_for_existing_directory() {
+        let dir = tempfile::tempdir().unwrap();
+        let b = Bookmark::new("test", dir.path().to_str().unwrap());
+        assert!(b.is_valid());
+    }
+
+    #[test]
+    fn is_valid_returns_false_for_nonexistent_path() {
+        let b = Bookmark::new("test", "/nonexistent/path/xyzzy123");
+        assert!(!b.is_valid());
+    }
+
+    #[test]
+    fn stale_returns_only_invalid_bookmarks() {
+        let dir = tempfile::tempdir().unwrap();
+        let c = col(&[
+            ("valid", dir.path().to_str().unwrap()),
+            ("stale", "/nonexistent/path/xyzzy123"),
+        ]);
+        let stale_names: Vec<_> = c.stale().map(|b| b.name.as_str()).collect();
+        assert_eq!(stale_names, vec!["stale"]);
+    }
+
+    #[test]
+    fn prune_removes_stale_entries_and_returns_count() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut c = col(&[
+            ("valid", dir.path().to_str().unwrap()),
+            ("stale", "/nonexistent/path/xyzzy123"),
+        ]);
+        let removed = c.prune();
+        assert_eq!(removed, 1);
+        let names: Vec<_> = c.iter().map(|b| b.name.as_str()).collect();
+        assert_eq!(names, vec!["valid"]);
     }
 }

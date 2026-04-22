@@ -1,7 +1,9 @@
+use crate::bookmarks::Bookmark;
 use crate::cli::Cli;
 use crate::init;
 use crate::selector;
 use crate::store::Store;
+use dialoguer::Confirm;
 
 pub fn run(cli: Cli) -> Result<(), String> {
     if let Some(shell_name) = cli.init {
@@ -44,6 +46,37 @@ pub fn run(cli: Cli) -> Result<(), String> {
         let mut collection = store.load()?;
         collection.remove(&name)?;
         store.save(&collection)?;
+        return Ok(());
+    }
+
+    if cli.prune {
+        let mut collection = store.load()?;
+        let stale: Vec<Bookmark> = collection.stale().cloned().collect();
+
+        if stale.is_empty() {
+            eprintln!("Nothing to prune, all bookmarks are valid.");
+            return Ok(());
+        }
+
+        eprintln!("The following bookmarks will be removed:");
+        for b in &stale {
+            eprintln!("  \u{2717} {} | {}", b.name, b.path);
+        }
+
+        if !cli.yes {
+            let confirmed = Confirm::new()
+                .with_prompt(format!("Remove {} bookmark(s)?", stale.len()))
+                .default(false)
+                .interact()
+                .map_err(|e| e.to_string())?;
+            if !confirmed {
+                return Ok(());
+            }
+        }
+
+        let count = collection.prune();
+        store.save(&collection)?;
+        eprintln!("Pruned {count} bookmark(s).");
         return Ok(());
     }
 
