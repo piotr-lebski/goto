@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/piotr-lebski/goto/compare/v0.3.0...v0.3.1) (2026-04-22)
+
+
+### Bug Fixes
+
+* correct PowerShell shell integration in install script ([#9](https://github.com/piotr-lebski/goto/issues/9)) ([63cadc3](https://github.com/piotr-lebski/goto/commit/63cadc35c4a39b9581f111fca9f634febeb36186))
+
 ## [0.3.0](https://github.com/piotr-lebski/goto/compare/v0.2.0...v0.3.0) (2026-04-22)
 
 
