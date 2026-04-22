@@ -75,6 +75,8 @@ goto --add <name>        # Save the current directory as <name>
 goto --replace <name>    # Update an existing bookmark to the current directory
 goto --remove <name>     # Delete a bookmark by name
 goto --list              # Print all bookmarks as 'name | path'
+goto --prune             # Remove bookmarks whose directories no longer exist
+goto --prune --yes       # Same, without the confirmation prompt
 ```
 
 ## Interactive Selection
