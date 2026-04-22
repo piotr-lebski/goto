@@ -1,6 +1,6 @@
 [package]
 name = "goto-dir"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Piotr Łebski <nuclear.refactor@proton.me>"]
 description = "A sleek CLI tool for managed directory jumping"
