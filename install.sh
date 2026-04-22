@@ -44,6 +44,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# ── dependency check ──────────────────────────────────────────────────────────
+command -v curl &>/dev/null || err "curl is required. Install it and re-run."
+
 # ── platform detection ────────────────────────────────────────────────────────
 OS=$(uname -s)
 ARCH=$(uname -m)
@@ -94,56 +97,57 @@ chmod +x "${BIN_DIR}/goto"
 ok "Installed to ${BIN_DIR}/goto"
 
 # ── shell integration ─────────────────────────────────────────────────────────
-if [[ "$SHELL_INTEGRATION" == "true" ]]; then
-  detect_shell() {
-    case "${SHELL:-}" in
-      */bash) echo "bash" ;;
-      */zsh)  echo "zsh"  ;;
-      */fish) echo "fish" ;;
-      *)      echo "unknown" ;;
-    esac
-  }
+detect_shell() {
+  case "${SHELL:-}" in
+    */bash) echo "bash" ;;
+    */zsh)  echo "zsh"  ;;
+    */fish) echo "fish" ;;
+    *)      echo "unknown" ;;
+  esac
+}
 
-  shell_config_file() {
-    local sh="$1"
-    case "$sh" in
-      bash)
-        if [[ "$OS" == "Darwin" ]]; then
-          echo "${HOME}/.bash_profile"
-        else
-          echo "${HOME}/.bashrc"
-        fi
-        ;;
-      zsh)  echo "${HOME}/.zshrc" ;;
-      fish) echo "${HOME}/.config/fish/config.fish" ;;
-      *)    echo "" ;;
-    esac
-  }
-
-  DETECTED_SHELL=$(detect_shell)
-  CONFIG_FILE=$(shell_config_file "$DETECTED_SHELL")
-
-  if [[ -z "$CONFIG_FILE" ]]; then
-    warn "Could not detect your shell (SHELL=${SHELL:-unset})."
-    warn "Add the following to your shell config manually:"
-    warn '  eval "$(goto --init)"'
-  else
-    # Ensure fish config directory exists before any writes
-    mkdir -p "$(dirname "$CONFIG_FILE")"
-
-    # Ensure BIN_DIR is on PATH (idempotent)
-    if ! grep -qF "${BIN_DIR}:" "$CONFIG_FILE" 2>/dev/null && \
-       ! grep -qF "\"${BIN_DIR}\"" "$CONFIG_FILE" 2>/dev/null; then
-      printf '\n' >> "$CONFIG_FILE"
-      if [[ "$DETECTED_SHELL" == "fish" ]]; then
-        echo "fish_add_path \"${BIN_DIR}\"" >> "$CONFIG_FILE"
+shell_config_file() {
+  local sh="$1"
+  case "$sh" in
+    bash)
+      if [[ "$OS" == "Darwin" ]]; then
+        echo "${HOME}/.bash_profile"
       else
-        echo "export PATH=\"${BIN_DIR}:\$PATH\"" >> "$CONFIG_FILE"
+        echo "${HOME}/.bashrc"
       fi
-      ok "Added ${BIN_DIR} to PATH in ${CONFIG_FILE}"
-    fi
+      ;;
+    zsh)  echo "${HOME}/.zshrc" ;;
+    fish) echo "${HOME}/.config/fish/config.fish" ;;
+    *)    echo "" ;;
+  esac
+}
 
-    # Add shell integration (idempotent)
+DETECTED_SHELL=$(detect_shell)
+CONFIG_FILE=$(shell_config_file "$DETECTED_SHELL")
+
+if [[ -z "$CONFIG_FILE" ]]; then
+  warn "Could not detect your shell (SHELL=${SHELL:-unset})."
+  warn "Add the following to your shell config manually:"
+  warn "  export PATH=\"${BIN_DIR}:\$PATH\""
+  warn '  eval "$(goto --init)"'
+else
+  # Ensure fish config directory exists before any writes
+  mkdir -p "$(dirname "$CONFIG_FILE")"
+
+  # Ensure BIN_DIR is on PATH (always, idempotent)
+  if ! grep -qF "${BIN_DIR}:" "$CONFIG_FILE" 2>/dev/null && \
+     ! grep -qF "\"${BIN_DIR}\"" "$CONFIG_FILE" 2>/dev/null; then
+    printf '\n' >> "$CONFIG_FILE"
+    if [[ "$DETECTED_SHELL" == "fish" ]]; then
+      echo "fish_add_path \"${BIN_DIR}\"" >> "$CONFIG_FILE"
+    else
+      echo "export PATH=\"${BIN_DIR}:\$PATH\"" >> "$CONFIG_FILE"
+    fi
+    ok "Added ${BIN_DIR} to PATH in ${CONFIG_FILE}"
+  fi
+
+  # Add shell integration (skipped by --no-shell-integration)
+  if [[ "$SHELL_INTEGRATION" == "true" ]]; then
     if grep -q "goto --init" "$CONFIG_FILE" 2>/dev/null; then
       ok "Shell integration already present in ${CONFIG_FILE}"
     else
@@ -154,12 +158,11 @@ if [[ "$SHELL_INTEGRATION" == "true" ]]; then
       fi
       ok "Added shell integration to ${CONFIG_FILE}"
     fi
+  else
+    echo ""
+    echo "  Shell init skipped. Add the following to ${CONFIG_FILE} manually:"
+    echo '    eval "$(goto --init)"'
   fi
-else
-  echo ""
-  echo "Shell integration skipped. Add the following to your shell config manually:"
-  echo '  eval "$(goto --init)"'
-  CONFIG_FILE=""
 fi
 
 echo ""
@@ -169,5 +172,5 @@ if [[ -n "$CONFIG_FILE" ]]; then
   echo "  Restart your shell or run:"
   echo "    source ${CONFIG_FILE}"
 else
-  echo "  Add ${BIN_DIR} to your PATH, then restart your shell."
+  echo "  Add ${BIN_DIR} to your PATH and the init line to your shell config, then restart your shell."
 fi
