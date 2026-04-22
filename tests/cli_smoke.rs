@@ -264,9 +264,14 @@ fn goto_no_args_exits_nonzero_for_stale_bookmark() {
     let config_dir = temp.path();
     let bookmarks_dir = config_dir.join("goto");
     std::fs::create_dir_all(&bookmarks_dir).unwrap();
+    let stale_base = tempfile::tempdir().unwrap();
+    let missing_path = stale_base.path().join("missing");
     std::fs::write(
         bookmarks_dir.join("bookmarks.json"),
-        r#"{"bookmarks":[{"name":"stale","path":"/nonexistent/path/aabbcc"}]}"#,
+        format!(
+            r#"{{"bookmarks":[{{"name":"stale","path":"{}"}}]}}"#,
+            missing_path.to_string_lossy().replace('\\', "\\\\")
+        ),
     )
     .unwrap();
 
@@ -519,11 +524,14 @@ fn goto_prune_yes_removes_stale_bookmarks() {
     let valid_dir = tempfile::tempdir().unwrap();
     let bookmarks_dir = config_dir.join("goto");
     std::fs::create_dir_all(&bookmarks_dir).unwrap();
+    let stale_base = tempfile::tempdir().unwrap();
+    let stale_missing = stale_base.path().join("missing");
     std::fs::write(
         bookmarks_dir.join("bookmarks.json"),
         format!(
-            r#"{{"bookmarks":[{{"name":"valid","path":"{}"}},{{"name":"stale","path":"/nonexistent/path/xyzzy123"}}]}}"#,
-            valid_dir.path().to_string_lossy().replace('\\', "\\\\")
+            r#"{{"bookmarks":[{{"name":"valid","path":"{}"}},{{"name":"stale","path":"{}"}}]}}"#,
+            valid_dir.path().to_string_lossy().replace('\\', "\\\\"),
+            stale_missing.to_string_lossy().replace('\\', "\\\\")
         ),
     )
     .unwrap();
@@ -541,7 +549,7 @@ fn goto_prune_yes_removes_stale_bookmarks() {
     );
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("stale") && stderr.contains("xyzzy123"),
+        stderr.contains("stale") && stderr.contains(stale_missing.to_string_lossy().as_ref()),
         "expected stale bookmark listed before removal: {stderr}"
     );
     assert!(
@@ -571,9 +579,14 @@ fn goto_prune_yes_on_all_stale_leaves_empty_store() {
     let config_dir = temp.path();
     let bookmarks_dir = config_dir.join("goto");
     std::fs::create_dir_all(&bookmarks_dir).unwrap();
+    let stale_base = tempfile::tempdir().unwrap();
+    let missing_path = stale_base.path().join("missing");
     std::fs::write(
         bookmarks_dir.join("bookmarks.json"),
-        r#"{"bookmarks":[{"name":"stale","path":"/nonexistent/path/xyzzy123"}]}"#,
+        format!(
+            r#"{{"bookmarks":[{{"name":"stale","path":"{}"}}]}}"#,
+            missing_path.to_string_lossy().replace('\\', "\\\\")
+        ),
     )
     .unwrap();
 

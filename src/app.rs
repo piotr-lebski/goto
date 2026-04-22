@@ -1,4 +1,3 @@
-use crate::bookmarks::Bookmark;
 use crate::cli::Cli;
 use crate::init;
 use crate::selector;
@@ -51,7 +50,7 @@ pub fn run(cli: Cli) -> Result<(), String> {
 
     if cli.prune {
         let mut collection = store.load()?;
-        let stale: Vec<Bookmark> = collection.stale().cloned().collect();
+        let stale = collection.drain_stale();
 
         if stale.is_empty() {
             if collection.iter().count() == 0 {
@@ -78,9 +77,8 @@ pub fn run(cli: Cli) -> Result<(), String> {
             }
         }
 
-        let count = collection.prune();
         store.save(&collection)?;
-        eprintln!("Pruned {count} bookmark(s).");
+        eprintln!("Pruned {} bookmark(s).", stale.len());
         return Ok(());
     }
 

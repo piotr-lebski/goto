@@ -74,10 +74,24 @@ impl BookmarkCollection {
         self.bookmarks.iter().filter(|b| !b.is_valid())
     }
 
+    /// Removes all stale bookmarks in a single pass and returns them.
+    /// Prefer this over calling [`stale`] followed by [`prune`] to avoid
+    /// scanning the filesystem twice.
+    pub fn drain_stale(&mut self) -> Vec<Bookmark> {
+        let mut removed = Vec::new();
+        self.bookmarks.retain(|b| {
+            if b.is_valid() {
+                true
+            } else {
+                removed.push(b.clone());
+                false
+            }
+        });
+        removed
+    }
+
     pub fn prune(&mut self) -> usize {
-        let before = self.bookmarks.len();
-        self.bookmarks.retain(|b| b.is_valid());
-        before - self.bookmarks.len()
+        self.drain_stale().len()
     }
 }
 
@@ -160,16 +174,20 @@ mod tests {
 
     #[test]
     fn is_valid_returns_false_for_nonexistent_path() {
-        let b = Bookmark::new("test", "/nonexistent/path/xyzzy123");
+        let dir = tempfile::tempdir().unwrap();
+        let missing = dir.path().join("missing");
+        let b = Bookmark::new("test", missing.to_str().unwrap());
         assert!(!b.is_valid());
     }
 
     #[test]
     fn stale_returns_only_invalid_bookmarks() {
-        let dir = tempfile::tempdir().unwrap();
+        let valid_dir = tempfile::tempdir().unwrap();
+        let stale_base = tempfile::tempdir().unwrap();
+        let missing = stale_base.path().join("missing");
         let c = col(&[
-            ("valid", dir.path().to_str().unwrap()),
-            ("stale", "/nonexistent/path/xyzzy123"),
+            ("valid", valid_dir.path().to_str().unwrap()),
+            ("stale", missing.to_str().unwrap()),
         ]);
         let stale_names: Vec<_> = c.stale().map(|b| b.name.as_str()).collect();
         assert_eq!(stale_names, vec!["stale"]);
@@ -177,13 +195,31 @@ mod tests {
 
     #[test]
     fn prune_removes_stale_entries_and_returns_count() {
-        let dir = tempfile::tempdir().unwrap();
+        let valid_dir = tempfile::tempdir().unwrap();
+        let stale_base = tempfile::tempdir().unwrap();
+        let missing = stale_base.path().join("missing");
         let mut c = col(&[
-            ("valid", dir.path().to_str().unwrap()),
-            ("stale", "/nonexistent/path/xyzzy123"),
+            ("valid", valid_dir.path().to_str().unwrap()),
+            ("stale", missing.to_str().unwrap()),
         ]);
         let removed = c.prune();
         assert_eq!(removed, 1);
+        let names: Vec<_> = c.iter().map(|b| b.name.as_str()).collect();
+        assert_eq!(names, vec!["valid"]);
+    }
+
+    #[test]
+    fn drain_stale_returns_removed_bookmarks_and_leaves_valid_ones() {
+        let valid_dir = tempfile::tempdir().unwrap();
+        let stale_base = tempfile::tempdir().unwrap();
+        let missing = stale_base.path().join("missing");
+        let mut c = col(&[
+            ("valid", valid_dir.path().to_str().unwrap()),
+            ("stale", missing.to_str().unwrap()),
+        ]);
+        let removed = c.drain_stale();
+        assert_eq!(removed.len(), 1);
+        assert_eq!(removed[0].name, "stale");
         let names: Vec<_> = c.iter().map(|b| b.name.as_str()).collect();
         assert_eq!(names, vec!["valid"]);
     }

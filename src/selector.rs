@@ -159,9 +159,11 @@ mod tests {
     fn format_items_dims_stale_bookmarks_and_leaves_valid_ones_plain() {
         use crate::bookmarks::{Bookmark, BookmarkCollection};
         let dir = tempfile::tempdir().unwrap();
+        let stale_base = tempfile::tempdir().unwrap();
+        let missing = stale_base.path().join("missing");
         let collection = BookmarkCollection::from_vec(vec![
             Bookmark::new("valid", dir.path().to_str().unwrap()),
-            Bookmark::new("stale", "/nonexistent/path/xyzzy123"),
+            Bookmark::new("stale", missing.to_str().unwrap()),
         ])
         .unwrap();
         let items = format_items(&collection);
