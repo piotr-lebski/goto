@@ -54,7 +54,11 @@ pub fn run(cli: Cli) -> Result<(), String> {
         let stale: Vec<Bookmark> = collection.stale().cloned().collect();
 
         if stale.is_empty() {
-            eprintln!("Nothing to prune, all bookmarks are valid.");
+            if collection.iter().count() == 0 {
+                eprintln!("Nothing to prune (no bookmarks saved).");
+            } else {
+                eprintln!("Nothing to prune, all bookmarks are valid.");
+            }
             return Ok(());
         }
 

@@ -36,6 +36,6 @@ pub struct Cli {
     pub prune: bool,
 
     /// Skip the confirmation prompt (use with --prune)
-    #[arg(long, conflicts_with_all = ["list", "add", "replace", "remove", "init"])]
+    #[arg(long, requires = "prune", conflicts_with_all = ["list", "add", "replace", "remove", "init"])]
     pub yes: bool,
 }
