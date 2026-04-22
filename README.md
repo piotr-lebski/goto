@@ -87,7 +87,7 @@ goto --init | source
 Add to your PowerShell profile (`$PROFILE`):
 
 ```powershell
-Invoke-Expression (& goto --init)
+Invoke-Expression ((& goto --init) -join "`n")
 ```
 
 ### Auto-detection
