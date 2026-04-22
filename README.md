@@ -1,5 +1,9 @@
 # goto
 
+[![Release](https://img.shields.io/github/v/release/piotr-lebski/goto?display_name=tag&sort=semver)](https://github.com/piotr-lebski/goto/releases)
+[![License](https://img.shields.io/github/license/piotr-lebski/goto)](https://github.com/piotr-lebski/goto/blob/main/LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-2ea44f)](https://github.com/piotr-lebski/goto/actions/workflows/ci.yml)
+
 A bookmark-based directory navigation tool. Save named shortcuts to directories
 and jump to them instantly from any terminal.
 
