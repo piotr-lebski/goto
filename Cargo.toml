@@ -1,0 +1,30 @@
+[package]
+name = "goto-dir"
+version = "0.1.0"
+edition = "2021"
+authors = ["Piotr Łebski <nuclear.refactor@proton.me>"]
+description = "A sleek CLI tool for managed directory jumping"
+homepage = "https://github.com/piotr-lebski/goto"
+repository = "https://github.com/piotr-lebski/goto"
+license = "MIT"
+readme = "README.md"
+keywords = ["cli", "navigation", "workflow", "productivity"]
+categories = ["command-line-utilities"]
+
+[lib]
+name = "goto"
+path = "src/lib.rs"
+
+[[bin]]
+name = "goto"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+dialoguer = "0.11"
+dirs = "5.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[dev-dependencies]
+tempfile = "3.10"
