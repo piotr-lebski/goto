@@ -16,7 +16,13 @@ curl -fsSL https://raw.githubusercontent.com/piotr-lebski/goto/main/install.sh |
 ```
 
 Installs the latest release to `~/.local/bin` and sets up shell integration automatically.
-Pass flags after `bash -s --`, e.g. `bash -s -- --version v0.2.0 --no-shell-integration`.
+To pass flags, pipe through `bash -s --`:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/piotr-lebski/goto/main/install.sh \
+  | bash -s -- --version v0.2.0 --no-shell-integration
+```
+
 Run `curl … | bash -s -- --help` to see all options.
 
 ### Windows (PowerShell)
@@ -26,7 +32,7 @@ iwr -useb https://raw.githubusercontent.com/piotr-lebski/goto/main/install.ps1 |
 ```
 
 Installs to `$env:LOCALAPPDATA\goto\bin` and updates your PowerShell profile.
-To pass flags, download and dot-source first:
+To pass flags (e.g. `-Version`, `-BinDir`, `-NoShellIntegration`), download and run the script directly:
 
 ```powershell
 iwr -useb https://raw.githubusercontent.com/piotr-lebski/goto/main/install.ps1 -OutFile install.ps1
