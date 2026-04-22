@@ -78,8 +78,12 @@ print "Pruned N bookmark(s)."
 - Stale bookmark: `"\x1b[2mname   | path\x1b[0m"` (ANSI dim)
 
 ANSI dim codes are passed through to fzf unchanged — fzf renders them natively.
-The path is parsed from the selected line by splitting on `" | "` (unchanged); ANSI
-codes appear before the name, so the split still works correctly.
+
+After selection (both fzf and built-in), the returned line must have ANSI escape
+sequences stripped before the `split_once(" | ")` path extraction. A small helper
+`strip_ansi(s: &str) -> String` removes all `\x1b[...m` sequences. This keeps the
+path extraction logic clean and correct regardless of whether the selected item was
+dimmed.
 
 ---
 
