@@ -94,18 +94,23 @@ try {
         if (-not (Test-Path $PROFILE)) {
             New-Item -ItemType File -Path $PROFILE -Force | Out-Null
         }
-        $initLine       = 'Invoke-Expression (& goto --init)'
+        $initLine       = 'Invoke-Expression ((& goto --init) -join "`n")'
         $profileContent = Get-Content $PROFILE -ErrorAction SilentlyContinue
         if ($profileContent -match "goto --init") {
             Write-Ok "Shell integration already present in $PROFILE"
         } else {
+            # Ensure the init line starts on its own line even if the file lacks a trailing newline.
+            $raw = Get-Content -Path $PROFILE -Raw -ErrorAction SilentlyContinue
+            if ($raw -and $raw[-1] -notin @("`r", "`n")) {
+                Add-Content -Path $PROFILE -Value ""
+            }
             Add-Content -Path $PROFILE -Value $initLine
             Write-Ok "Added shell integration to $PROFILE"
         }
     } else {
         Write-Host ""
         Write-Host "  Shell integration skipped. Add the following to your PowerShell profile manually:"
-        Write-Host "    Invoke-Expression (& goto --init)"
+        Write-Host '    Invoke-Expression ((& goto --init) -join "`n")'
     }
 
     Write-Host ""
